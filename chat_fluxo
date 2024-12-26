@@ -1,10 +1,17 @@
+#Para o Script funcionar, é necessário passar como parâmetro os últimos 5 números do protocolo do chat.
+#O Script só funciona para o dia atual. Se for necessário filtrar em outros dias passados, editar a linha 17, alterando o caminho de consulta do log.
+
 if [ -z "$1" ]; then
     echo "Uso: $0 <valor_para_busca>"
     exit 1
 fi
 
+read -p "Informe os 5 últimos digitos do protocolo chat: " protocolo
+
 # Variável com o valor passado como argumento
+#var=$protocolo
 var="$1"
+
 
 # Caminho do arquivo de log
 log_file="/var/log/asterisk/ffpainel_chat.log"
