@@ -1,0 +1,19 @@
+if [ -z "$1" ]; then
+    echo "Uso: $0 <valor_para_busca>"
+    exit 1
+fi
+
+# Variável com o valor passado como argumento
+var="$1"
+
+# Caminho do arquivo de log
+log_file="/var/log/asterisk/ffpainel_chat.log"
+
+# Verifica se o arquivo de log existe
+if [ ! -f "$log_file" ]; then
+    echo "Arquivo de log não encontrado: $log_file"
+    exit 1
+fi
+
+# Filtra as linhas relevantes e extrai as frases desejadas
+grep -iE "$var" "$log_file" | grep -oP "(Processando o contexto '.*?'|Tomada de decisão: .*?$|Menu: .*?$)" || echo "Nenhuma correspondência encontrada para: $var"
