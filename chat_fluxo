@@ -1,20 +1,24 @@
-#Para o Script funcionar, é necessário passar como parâmetro os últimos 5 números do protocolo do chat.
-#O Script só funciona para o dia atual. Se for necessário filtrar em outros dias passados, editar a linha 17, alterando o caminho de consulta do log.
+#!/bin/bash
 
+#verifica se o script foi executado sem parâmetro
 if [ -z "$1" ]; then
-    echo "Uso: $0 <valor_para_busca>"
-    exit 1
+    read -p "Informe os 5 ultimos digitos do protocolo: " var
+else
+    # Usa o parâmetro passado
+    var="$1"
 fi
 
-read -p "Informe os 5 últimos digitos do protocolo chat: " protocolo
+# Captura o dia/quantidade para voltar à data desejada
+read -p "Informe o número de dias anteriores [data]: " dias
 
-# Variável com o valor passado como argumento
-#var=$protocolo
-var="$1"
-
-
-# Caminho do arquivo de log
-log_file="/var/log/asterisk/ffpainel_chat.log"
+# Define o caminho do arquivo de log com base no número de dias
+if [ "$dias" -eq 0 ]; then
+    log_file="/var/log/asterisk/ffpainel_chat.log"
+elif [ "$dias" -eq 1 ]; then
+    log_file="/var/log/asterisk/ffpainel_chat.log.1"
+else
+    log_file="/var/log/asterisk/ffpainel_chat.log.$dias.zst"
+fi
 
 # Verifica se o arquivo de log existe
 if [ ! -f "$log_file" ]; then
@@ -22,5 +26,10 @@ if [ ! -f "$log_file" ]; then
     exit 1
 fi
 
-# Filtra as linhas relevantes e extrai as frases desejadas
-grep -iE "$var" "$log_file" | grep -oP "(Processando o contexto '.*?'|Tomada de decisão: .*?$|Menu: .*?$)" || echo "Nenhuma correspondência encontrada para: $var"
+# Lê o arquivo de log e aplica o filtro necessário
+if [[ "$dias" -eq 0 || "$dias" -eq 1 ]]; then
+    # Log não compactado
+    grep -iE "$var" "$log_file" | grep -oP "(Processando o contexto '.*?'|Tomada de decisão: .*?$|Menu: .*?$)" || echo "Nenhuma correspondência encontrada para: $var"
+else
+    # Log compactado (.zst)
+    zstdcat "$log_file" | grep -iE "$var" | grep -oP "(Processando o contexto '.*?'|Tomada de decisão: .*?$|Menu: .*?$)" || echo "Nenhuma correspondência encontrada para: $var"
