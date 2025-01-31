@@ -1,8 +1,7 @@
 #!/bin/bash
 
-#verifica se o script foi executado sem parâmetro
 if [ -z "$1" ]; then
-    read -p "Informe os 5 ultimos digitos do protocolo: " var
+    read -p "Informe os 5 últimos dígitos do protocolo: " var
 else
     # Usa o parâmetro passado
     var="$1"
@@ -33,3 +32,4 @@ if [[ "$dias" -eq 0 || "$dias" -eq 1 ]]; then
 else
     # Log compactado (.zst)
     zstdcat "$log_file" | grep -iE "$var" | grep -oP "(Processando o contexto '.*?'|Tomada de decisão: .*?$|Menu: .*?$)" || echo "Nenhuma correspondência encontrada para: $var"
+fi
