@@ -1,11 +1,14 @@
 #!/bin/bash
 
 if [ -z "$1" ]; then
-    read -p "Informe os 5 últimos dígitos do protocolo: " var
+    read -p "Informe o protocolo: " protocolo_completo
 else
     # Usa o parâmetro passado
-    var="$1"
+    protocolo_completo="$1"
 fi
+
+# Remove os 8 primeiros dígitos do protocolo
+var="${protocolo_completo:8}"
 
 # Captura o dia/quantidade para voltar à data desejada
 read -p "Informe o número de dias anteriores [data]: " dias
@@ -28,8 +31,38 @@ fi
 # Lê o arquivo de log e aplica o filtro necessário
 if [[ "$dias" -eq 0 || "$dias" -eq 1 ]]; then
     # Log não compactado
-    grep -iE "$var" "$log_file" | grep -oP "(Processando o contexto '.*?'|Tomada de decisão: .*?$|Processando o menu .*?$)" || echo "Nenhuma correspondência encontrada para: $var"
+    grep -iE "$var" "$log_file" | awk -v var="$var" '
+        {
+            # Captura a data e hora no início da linha
+            if (match($0, /^\[([0-9]{2}\/[0-9]{2}\/[0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2})\]/)) {
+                data_hora = substr($0, RSTART + 1, RLENGTH - 2)
+                linha = $0
+            }
+            # Filtra as linhas que contêm o padrão desejado
+            if (linha ~ var) {
+                # Extrai apenas a parte desejada da linha (o que já era exibido antes)
+                if (match(linha, /(Processando o contexto .*|Tomada de decisão: .*|Processando o menu .*)/)) {
+                    print data_hora, substr(linha, RSTART, RLENGTH)
+                }
+            }
+        }
+    ' || echo "Nenhuma correspondência encontrada para: $var"
 else
     # Log compactado (.zst)
-    zstdcat "$log_file" | grep -iE "$var" | grep -oP "(Processando o contexto '.*?'|Tomada de decisão: .*?$|Processando o menu .*?$)" || echo "Nenhuma correspondência encontrada para: $var"
+    zstdcat "$log_file" | grep -iE "$var" | awk -v var="$var" '
+        {
+            # Captura a data e hora no início da linha
+            if (match($0, /^\[([0-9]{2}\/[0-9]{2}\/[0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2})\]/)) {
+                data_hora = substr($0, RSTART + 1, RLENGTH - 2)
+                linha = $0
+            }
+            # Filtra as linhas que contêm o padrão desejado
+            if (linha ~ var) {
+                # Extrai apenas a parte desejada da linha (o que já era exibido antes)
+                if (match(linha, /(Processando o contexto .*|Tomada de decisão: .*|Processando o menu .*)/)) {
+                    print data_hora, substr(linha, RSTART, RLENGTH)
+                }
+            }
+        }
+    ' || echo "Nenhuma correspondência encontrada para: $var"
 fi
