@@ -48,7 +48,7 @@ eval "$cmd" | grep -iF "$var" | awk -v var="$var" '
 
         # Filtra as linhas que contêm o padrão desejado e exibe a hash corretamente
         if ($0 ~ var) {
-            if (match($0, /(Processando o contexto .*|Tomada de decisão: .*|Processando o menu .*)/)) {
+            if (match($0, /(Processando o contexto .*|Gerando a tomada de decisão .*|Tomada de decisão: .*|Processando o menu .*)/)) {
                 print data_hora, hash, substr($0, RSTART, RLENGTH)
             }
         }
